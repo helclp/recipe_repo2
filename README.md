@@ -1,9 +1,9 @@
-# recipe_repo2
-DSC80 Project 5 assignment
+# **Number of Steps in Recipe Predictor Model**
 
-# Framing the Problem
+# **Framing the Problem**
+Problem statement: *Build a model that predicts the number of steps in a recipe, based on various attributes of the recipe*. type of prediction: regression. response variable: number of steps in recipe. The response variable was chosen out of interest in buidling a model with a response variable that did not have as direct correlation with the other columns as some of the other potential variables. (in other words, the difficulty/challenge seemed interesting). Metric chosen to evaluate the model: Mean Absolute Error (MAE). Chosen due its robustness against outliers. Due to the size of data set there are many large outliers in the data set and other errors such as RMSE would have been heavily influenced by these outliers, thus making MAE the most suitable metric.
 
-nutrition df below here:
+Nutrition data frame used for model shown below here: 
 
 | name                                 |     id |   minutes |   n_steps |   n_ingredients |   recipe_id | more_than_1_rating   |   calories |   total_fat |   sugar |   sodium |   protein |   sat_fat |   carbohydrates | over_400_cal   |
 |:-------------------------------------|-------:|----------:|----------:|----------------:|------------:|:---------------------|-----------:|------------:|--------:|---------:|----------:|----------:|----------------:|:---------------|
@@ -13,10 +13,14 @@ nutrition df below here:
 | 412 broccoli casserole               | 306168 |        40 |         6 |               9 |      306168 | True                 |      194.8 |          20 |       6 |       32 |        22 |        36 |               3 | False          |
 | 412 broccoli casserole               | 306168 |        40 |         6 |               9 |      306168 | True                 |      194.8 |          20 |       6 |       32 |        22 |        36 |               3 | False          |
 
-
-
 # Baseline Model
+
+The model chosen for the baseline is a Decision Tree Regressor (also chosen due to its ability to perform well when prediciting non-linear relationships). Numerical (Quantitative) features used: minutes, n_ingredients, calories, total_fat, sugar, sodium, protein, sat_fat, carbohydrates. Bolean features: more_than_1_rating. No categorical features were used for this model. This comes out to a total of 9 Quantiative features and 1 boolean (nominal feature). Using a pipeline all numerical columns were standardized using StandardScaler(). After training the baseline model the Mean absolute error on the test set came out to be 1.61351. For starting I would say that this model is already pretty good considering the average steps for a recipe is 10.01. This means that on average the baseline model is off by 1.61351 steps from the actual steps when predicting on the test set. 
 
 # Final Model
 
+As far as features added an extra step/transformer was added in the ColumnTransformer inside the pipeline. The new transformer, QuantileTransformer, was added and used on the n_ingredients column. This was added because n_ingredients does not have a linear nor very consistent relationship with n_ingredients and is better suited using probabilities, for these same reasons I believe the Decision Tree regressor model was improved. A grid search was also conducted for hyper parameter tuning and many potentialy featues were selected through before finding the ultimate hyperparameters. Ultimately the hyper parameters used were: 'max_depth': None, 'max_features': 'auto', 'max_leaf_nodes': None, 'min_samples_leaf': 2, 'min_samples_split': 3. I believe all of these features contributed to the Decision Tree regressor model's improvement in their own ways. Max depth being set to non allows the model to make as many splits as it see's fit which can help to have really high and precise answers when prediciting, max_features set to auto is similar to max depth and gives the model full acess to all features which it deems helpful in making predicitions, max_leaf nodes set to none also allows the model to have high purity and precision when splitting, min_samples_leaf ended on 2 which is the default, however this helps to make sure the model is not forced to make unecessary splits which may comprise purity and information gain. The final model ended with a mean absolute error of 1.54105 which is 0.1 steps better then the baseline. considering that the baseline was already good, I think this is a very impressive and substantial improvement. It seems that Decision tree regressors are perfectly suited for this data set and scenario.
+
 # Fairness Analysis
+
+The two groups used for the fairness analysis were recipes at or above 400 calories and recipes below 400 calories. This was chosen since recipes with higher lower calories tend to have more steps and less ingredients and vice versa. In this section we want to make sure the model does not heavy rely on this correlation and leverages the other features well to make predicition and is not biased. The evaluation of the model on the groups used was r2 score. Null hypothesis: *Model is fair. r2 score is the same for recipes with 400 calories or above, as it is for recipes with less than 400 calories.* Alternate hypothesis: *Our model is unfair, the model is significantly better at predicitng one group over the other.* The test static used for the permuation test was the absolute difference in r2 scores on a test set from recipes that 400 calories or more and recipes that had less. The actual value of this was (0.003717730061977287). For this permuation test the standard significance level of 5% was used. After conducting permutation testing a p-value of 0.92 was found. Thus we fail to reject the null hypothesis.
